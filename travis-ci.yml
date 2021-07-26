@@ -1,23 +1,16 @@
-sudo: required #is required to use docker service in travis
-
-language: php #can be any language, just php for example
-
-services:
-  - docker # required, but travis uses older version of docker :(
-
-install:
-  - echo "install nothing!" # put your normal pre-testing installs here
-
-script:
-  - echo "no tests!" # put your normal testing scripts here
-
-after_success:
-  - docker --version  # document the version travis is using
-  - pip install --user awscli # install aws cli w/o sudo
-  - export PATH=$PATH:$HOME/.local/bin # put aws in the path
-  - eval $(aws ecr get-login --region us-east-1) #needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
-  - docker build -t my_example_app .
-  - docker tag my_example_app:latest [your_ecr_account].dkr.ecr.us-east-1.amazonaws.com/my_example_app:latest
-  - docker push [your_ecr_account].dkr.ecr.us-east-1.amazonaws.com/my_example_app:latest
+image: osanamgcj/mobead_image_build
+pipelines:
+  steps:
   
-# sadly, travis doesn't cache docker builds yet, so each build will take a while
+    - step: &build-app
+        name: "Imagem Docker Teste"
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - if [ ! -e $BITBUCKET_TAG ]; then TAG=$BITBUCKET_TAG; else TAG=1.0.0-rc; fi;
+          - IMAGE=${AWS_ECR_HOST}/api-credito:${TAG}
+          - $(aws ecr get-login --no-include-email --region us-east-2)
+          - docker build -f Dockerfile . -t ${IMAGE}
+          - docker push ${IMAGE}
