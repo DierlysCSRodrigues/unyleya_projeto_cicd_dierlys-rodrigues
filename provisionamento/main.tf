@@ -1,3 +1,12 @@
+terraform{
+  required_providers {
+    aruzerm = {
+      source = "hashicorp/azurerm"
+      version = "=2.46.0"
+    }
+  }
+}
+
 #Configuração Conexão Microsoft Azure
 provider "azurerm" {
     subscription_id = var.subscription_id
